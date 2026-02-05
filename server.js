@@ -5,40 +5,31 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const dbPath = path.resolve(process.cwd(), "database.duckdb");
-console.log("DB PATH:", dbPath);
-const db = new duckdb.Database(dbPath);
+// Load the Parquet file
+const parquetFile = path.join(__dirname, "stops.parquet");
+console.log("Loading stops from Parquet:", parquetFile);
+
+const db = new duckdb.Database(':memory:'); // in-memory DB
 
 // Helpers
 function query(sql) {
-  return new Promise((resolve, reject) => db.all(sql, (err, rows) => err ? reject(err) : resolve(rows)));
+  return new Promise((resolve, reject) =>
+    db.all(sql, (err, rows) => (err ? reject(err) : resolve(rows)))
+  );
 }
 function exec(sql) {
-  return new Promise((resolve, reject) => db.exec(sql, err => err ? reject(err) : resolve()));
+  return new Promise((resolve, reject) =>
+    db.exec(sql, err => (err ? reject(err) : resolve()))
+  );
 }
 
 // Init DB
 async function init() {
-  console.log("Initializing DB...");
-  await exec(`
-    CREATE TABLE IF NOT EXISTS stops (
-      id INTEGER,
-      name VARCHAR,
-      lat DOUBLE,
-      lon DOUBLE
-    )
-  `);
+  console.log("Initializing DB from Parquet...");
+  await exec(`CREATE TABLE stops AS SELECT * FROM read_parquet('${parquetFile}')`);
 
-  let count = await query(`SELECT COUNT(*) as c FROM stops`);
-  console.log("Rows before insert:", count);
-
-  if (count[0].c === 0) {
-    await exec(`INSERT INTO stops VALUES (1,'Central Station',45.508,-73.553)`);
-    await exec(`INSERT INTO stops VALUES (2,'City Hall',45.509,-73.554)`);
-    await exec(`INSERT INTO stops VALUES (3,'Museum',45.507,-73.552)`);
-    let verify = await query(`SELECT * FROM stops`);
-    console.log("Rows after insert:", verify);
-  }
+  let count = await query(`SELECT COUNT(*) AS c FROM stops`);
+  console.log("Rows loaded:", count[0].c.toString());
 }
 
 // API
