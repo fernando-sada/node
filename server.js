@@ -5,7 +5,7 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const dbPath = path.join(__dirname, "database.duckdb");
+const dbPath = path.resolve(process.cwd(), "database.duckdb");
 console.log("DB PATH:", dbPath);
 const db = new duckdb.Database(dbPath);
 
