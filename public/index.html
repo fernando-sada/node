@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DuckDB Test</title>
+</head>
+<body>
+
+<h2>DuckDB Local API Test</h2>
+
+<button onclick="loadStops()">Load stops</button>
+<button onclick="near()">Find nearest</button>
+
+<pre id="url"></pre>
+<pre id="output"></pre>
+
+<script>
+async function loadStops() {
+  const url = "/api/stops";
+  document.getElementById("url").textContent = url;
+
+  const res = await fetch(url);
+  const data = await res.json();
+  output.textContent = JSON.stringify(data, null, 2);
+}
+
+async function near() {
+  const url = "/api/near?lat=45.508&lon=-73.553";
+  document.getElementById("url").textContent = url;
+
+  const res = await fetch(url);
+  const data = await res.json();
+  output.textContent = JSON.stringify(data, null, 2);
+}
+</script>
+
+</body>
+</html>
